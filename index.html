@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Piyano Seçim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a10;
+    --bg-soft:#0e1118;
+    --surface:#12151f;
+    --surface-2:#171b27;
+    --line:#222637;
+    --text:#f3f5fb;
+    --text-dim:#8a90a6;
+    --text-faint:#565d75;
+    --ok:#2bf0b0;
+    --ok-glow:rgba(43,240,176,.45);
+    --bad:#ff4d6a;
+    --bad-glow:rgba(255,77,106,.45);
+    --c1:#22e3c4; /* bütçe dostu - cyan */
+    --c2:#7c6bff; /* dengeli - violet */
+    --c3:#ffc857; /* premium - amber */
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
+  body{
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(124,107,255,.10), transparent 45%),
+      radial-gradient(circle at 90% 15%, rgba(34,227,196,.08), transparent 40%);
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--c2);color:#0a0a0a;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 20px 6px;
+  }
+  .brandmark{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;
+    color:var(--text-faint);text-transform:uppercase;
+  }
+  .pulse-dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--ok);margin-right:6px;box-shadow:0 0 8px var(--ok-glow);
+    animation:blink 1.8s infinite ease-in-out;
+  }
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  /* ---------- hero ---------- */
+  .hero{padding:6px 22px 26px;}
+  .hero h1{
+    font-family:'Sora',sans-serif;font-weight:800;
+    font-size:clamp(34px,9vw,46px);line-height:1.04;letter-spacing:-.01em;
+  }
+  .hero h1 span{
+    background:linear-gradient(95deg,var(--c2),var(--c1) 60%,var(--c3));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p{
+    margin-top:10px;color:var(--text-dim);font-size:14.5px;line-height:1.5;max-width:34ch;
+  }
+  .hero p b{color:var(--text);font-weight:600;}
+
+  .swipe-hint{
+    margin:18px 22px 4px;display:flex;align-items:center;gap:8px;
+    color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;
+  }
+  .swipe-hint .arrow{display:inline-flex;animation:nudge 1.6s infinite ease-in-out;}
+  @keyframes nudge{0%,100%{transform:translateX(0);}50%{transform:translateX(6px);}}
+
+  /* ---------- carousel ---------- */
+  .deck-wrap{position:relative;margin-top:10px;}
+  .deck{
+    display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding:6px 22px 18px 22px;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .deck::-webkit-scrollbar{display:none;}
+  .card{
+    flex:0 0 86vw;max-width:380px;scroll-snap-align:center;
+    background:linear-gradient(160deg,var(--surface) 0%,var(--bg-soft) 100%);
+    border:1px solid var(--line);border-radius:22px;padding:22px 20px 20px;
+    position:relative;overflow:hidden;
+    transition:transform .35s ease, border-color .35s ease;
+    opacity:.55;transform:scale(.94);
+  }
+  .card.active{opacity:1;transform:scale(1);}
+  .card::before{
+    content:"";position:absolute;inset:-1px;border-radius:22px;padding:1px;
+    background:linear-gradient(135deg,var(--accent) 0%, transparent 55%);
+    opacity:0;transition:opacity .4s ease;pointer-events:none;
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+  }
+  .card.active::before{opacity:.6;}
+
+  .card[data-acc="1"]{--accent:var(--c1);}
+  .card[data-acc="2"]{--accent:var(--c2);}
+  .card[data-acc="3"]{--accent:var(--c3);}
+
+  .tag-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;
+    color:var(--accent);text-transform:uppercase;font-weight:700;
+  }
+  .rank{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-faint);
+  }
+
+  .model-brand{font-size:13px;color:var(--text-dim);font-weight:600;}
+  .model-name{
+    font-family:'Sora',sans-serif;font-weight:700;font-size:25px;line-height:1.15;
+    margin-top:2px;margin-bottom:12px;
+  }
+
+  .price-block{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap;
+  }
+  .price{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:23px;
+    color:var(--accent);text-shadow:0 0 18px var(--accent);
+  }
+  .price-note{font-size:11px;color:var(--text-faint);}
+  .specline{
+    font-size:12.5px;color:var(--text-dim);line-height:1.55;margin-bottom:16px;
+    border-left:2px solid var(--line);padding-left:10px;
+  }
+
+  /* checklist matrix */
+  .matrix{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+    padding:6px 4px;margin-bottom:16px;
+  }
+  .matrix-title{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;
+    color:var(--text-faint);text-transform:uppercase;padding:8px 14px 2px;
+  }
+  .mrow{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;border-top:1px solid var(--line);
+  }
+  .mrow:first-of-type{border-top:none;}
+  .mlabel{font-size:13.5px;font-weight:500;color:var(--text);}
+  .micon{
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;flex:0 0 24px;
+  }
+  .micon.ok{background:rgba(43,240,176,.12);color:var(--ok);box-shadow:0 0 12px var(--ok-glow);}
+  .micon.bad{background:rgba(255,77,106,.12);color:var(--bad);box-shadow:0 0 12px var(--bad-glow);}
+
+  .cta{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:14px 0;border-radius:13px;border:none;cursor:pointer;
+    font-family:'Sora',sans-serif;font-weight:700;font-size:14.5px;
+    background:var(--accent);color:#06070a;
+    box-shadow:0 8px 24px -8px var(--accent);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .cta:active{transform:scale(.97);}
+
+  /* dots */
+  .dots{display:flex;justify-content:center;gap:8px;margin:6px 0 8px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:.3s;}
+  .dot.active{width:22px;background:var(--text);}
+
+  /* ---------- tech banner ---------- */
+  .banner{
+    margin:34px 18px 24px;padding:26px 22px;border-radius:24px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(124,107,255,.35), transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(34,227,196,.25), transparent 50%),
+      #0c0e16;
+    border:1px solid #232742;
+  }
+  .banner::after{
+    content:"";position:absolute;inset:0;
+    background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 26px);
+    pointer-events:none;
+  }
+  .banner-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;
+    color:#a9b4ff;background:rgba(124,107,255,.14);border:1px solid rgba(124,107,255,.4);
+    padding:5px 10px;border-radius:100px;margin-bottom:14px;text-transform:uppercase;
+  }
+  .banner h3{
+    font-family:'Sora',sans-serif;font-size:22px;font-weight:800;line-height:1.2;
+    margin-bottom:10px;position:relative;z-index:1;
+  }
+  .banner h3 i{
+    background:linear-gradient(95deg,#22e3c4,#7c6bff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;font-style:normal;
+  }
+  .banner p{
+    font-size:13.5px;color:#aab0c8;line-height:1.6;max-width:42ch;position:relative;z-index:1;
+  }
+  .midi-row{
+    display:flex;gap:10px;margin-top:18px;position:relative;z-index:1;flex-wrap:wrap;
+  }
+  .midi-chip{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:#dfe2f5;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    padding:7px 12px;border-radius:10px;display:flex;align-items:center;gap:6px;
+  }
+  .midi-chip b{color:#22e3c4;}
+
+  footer{
+    padding:6px 24px 40px;color:var(--text-faint);font-size:11px;line-height:1.7;
+    font-family:'JetBrains Mono',monospace;
+  }
+  footer a{color:#8a90a6;text-decoration:underline;text-decoration-color:#2a2e40;}
+
+  @media (min-width:600px){
+    .card{flex:0 0 360px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brandmark"><span class="pulse-dot"></span>CANLI FİYAT TARAMASI · TR</div>
+    <div class="brandmark">88 TUŞ</div>
+  </div>
+
+  <section class="hero">
+    <h1>Hangi piyano,<br><span>hangi öncelik?</span></h1>
+    <p>3 model, aynı 88 tuş, <b>3 farklı öncelik.</b> Tuş kalitesi, bütçe ve alan tasarrufunda kim ne veriyor — kaydır, gör.</p>
+  </section>
+
+  <div class="swipe-hint"><span class="arrow">→</span> kaydırarak karşılaştır</div>
+
+  <div class="deck-wrap">
+    <div class="deck" id="deck">
+
+      <!-- CARD 1 — Casio CDP-S110 -->
+      <article class="card" data-acc="1">
+        <div class="tag-row">
+          <span class="eyebrow">Bütçe Dostu</span>
+          <span class="rank">1 / 3 · en ucuz</span>
+        </div>
+        <div class="model-brand">CASIO</div>
+        <div class="model-name">CDP&#8209;S110</div>
+        <div class="price-block">
+          <span class="price">₺18.215</span>
+          <span class="price-note">Akakçe en ucuz fiyat</span>
+        </div>
+        <div class="specline">
+          232&nbsp;mm gövde derinliği · 8,4&nbsp;kg · 64 sesli polifoni · USB‑MIDI + Chordana Play uyumlu
+        </div>
+        <div class="matrix">
+          <div class="matrix-title">Özellik Kontrol Listesi</div>
+          <div class="mrow"><span class="mlabel">Tuş Kalitesi</span><span class="micon bad">✕</span></div>
+          <div class="mrow"><span class="mlabel">Ekonomik Uygunluk</span><span class="micon ok">✓</span></div>
+          <div class="mrow"><span class="mlabel">Alan Tasarrufu</span><span class="micon ok">✓</span></div>
+        </div>
+        <a class="cta" href="https://www.akakce.com/piyano/en-ucuz-casio-cdp-s110-dijital-fiyati,1931229407.html" target="_blank" rel="noopener">Satın Alma Sitesine Git →</a>
+      </article>
+
+      <!-- CARD 2 — Yamaha P-145 -->
+      <article class="card" data-acc="2">
+        <div class="tag-row">
+          <span class="eyebrow">Dengeli Performans</span>
+          <span class="rank">2 / 3 · orta segment</span>
+        </div>
+        <div class="model-brand">YAMAHA</div>
+        <div class="model-name">P&#8209;145</div>
+        <div class="price-block">
+          <span class="price">₺26.444</span>
+          <span class="price-note">Akakçe en ucuz fiyat</span>
+        </div>
+        <div class="specline">
+          GHS ağırlıklı çekiç aksiyonu · 192 sesli polifoni · 295&nbsp;mm derinlik · 11,6&nbsp;kg
+        </div>
+        <div class="matrix">
+          <div class="matrix-title">Özellik Kontrol Listesi</div>
+          <div class="mrow"><span class="mlabel">Tuş Kalitesi</span><span class="micon ok">✓</span></div>
+          <div class="mrow"><span class="mlabel">Ekonomik Uygunluk</span><span class="micon ok">✓</span></div>
+          <div class="mrow"><span class="mlabel">Alan Tasarrufu</span><span class="micon bad">✕</span></div>
+        </div>
+        <a class="cta" href="https://www.akakce.com/piyano/en-ucuz-yamaha-p145b-siyah-dijital-fiyati,312592146.html" target="_blank" rel="noopener">Satın Alma Sitesine Git →</a>
+      </article>
+
+      <!-- CARD 3 — Casio Privia PX-S1100 -->
+      <article class="card" data-acc="3">
+        <div class="tag-row">
+          <span class="eyebrow">Premium Tasarım</span>
+          <span class="rank">3 / 3 · en pahalı</span>
+        </div>
+        <div class="model-brand">CASIO PRIVIA</div>
+        <div class="model-name">PX&#8209;S1100</div>
+        <div class="price-block">
+          <span class="price">₺33.345</span>
+          <span class="price-note">Akakçe en ucuz fiyat</span>
+        </div>
+        <div class="specline">
+          Tırmıklı Çekiç Aksiyonu II · 192 sesli polifoni · 232&nbsp;mm ultra‑ince gövde · Bluetooth MIDI
+        </div>
+        <div class="matrix">
+          <div class="matrix-title">Özellik Kontrol Listesi</div>
+          <div class="mrow"><span class="mlabel">Tuş Kalitesi</span><span class="micon ok">✓</span></div>
+          <div class="mrow"><span class="mlabel">Ekonomik Uygunluk</span><span class="micon bad">✕</span></div>
+          <div class="mrow"><span class="mlabel">Alan Tasarrufu</span><span class="micon ok">✓</span></div>
+        </div>
+        <a class="cta" href="https://www.akakce.com/piyano/en-ucuz-casio-px-s1000rd-dijital-kirmizi-fiyati,1184770715.html" target="_blank" rel="noopener">Satın Alma Sitesine Git →</a>
+      </article>
+
+    </div>
+    <div class="dots" id="dots">
+      <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+  </div>
+
+  <section class="banner">
+    <span class="banner-tag">⚡ Teknoloji Notu</span>
+    <h3>Bu üçü de sadece piyano değil,<br><i>bir USB‑MIDI stüdyosu.</i></h3>
+    <p>Tek bir USB kabloyla bilgisayarına bağla; çaldığın her şey anında dijital nota olarak yazılsın, DAW'da kayda dönüşsün. Tuşa dokunduğun an, beste başlasın.</p>
+    <div class="midi-row">
+      <span class="midi-chip"><b>●</b> USB‑MIDI çıkışı</span>
+      <span class="midi-chip"><b>●</b> Anında nota yazımı</span>
+      <span class="midi-chip"><b>●</b> DAW / app desteği</span>
+    </div>
+  </section>
+
+  <footer>
+    Fiyatlar Akakçe üzerinden alınan güncel "en ucuz" satıcı teklifleridir, stok ve kampanyalara göre anlık değişebilir.<br>
+    Karşılaştırma kriterleri: Tuş Kalitesi, Ekonomik Uygunluk, Alan Tasarrufu — model özellikleri esas alınarak değerlendirilmiştir.
+  </footer>
+
+<script>
+  const deck = document.getElementById('deck');
+  const cards = Array.from(deck.querySelectorAll('.card'));
+  const dots = Array.from(document.getElementById('dots').querySelectorAll('.dot'));
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const idx = cards.indexOf(e.target);
+      if(e.isIntersecting && e.intersectionRatio > 0.6){
+        cards.forEach(c=>c.classList.remove('active'));
+        e.target.classList.add('active');
+        dots.forEach(d=>d.classList.remove('active'));
+        if(dots[idx]) dots[idx].classList.add('active');
+      }
+    });
+  }, {root: deck, threshold:[0.6]});
+
+  cards.forEach(c=>io.observe(c));
+</script>
+</body>
+</html>
